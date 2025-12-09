@@ -152,7 +152,7 @@ export default function CouponCard({
         {hasUsageLimit && (
           <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+              className="h-full bg-linear-to-r from-purple-500 to-pink-500 transition-all duration-500"
               style={{ width: `${Math.min(usagePercentage, 100)}%` }}
             ></div>
           </div>
