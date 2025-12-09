@@ -1,21 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-export async function GET() {
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 200, headers: corsHeaders() });
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get('code');
   try {
-    const { data: coupons, error } = await supabase
-      .from('coupons')
-      .select('*')
-      .order('createdAt', { ascending: false });
+    let query = supabase.from('coupons').select('*');
+    
+    if (code) {
+      query = query.eq('code', code);
+    } else {
+      query = query.order('createdAt', { ascending: false });
+    }
+
+    const { data: coupons, error } = await query;
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data: coupons });
+    return NextResponse.json({ success: true, data: coupons }, { headers: corsHeaders() });
   } catch (error) {
     console.error('Error fetching coupons:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch coupons' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders() }
     );
   }
 }
@@ -28,7 +47,7 @@ export async function POST(request: NextRequest) {
     if (!body.code || !body.discountType) {
       return NextResponse.json(
         { success: false, error: 'Code and discount type are required' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders() }
       );
     }
 
@@ -36,7 +55,7 @@ export async function POST(request: NextRequest) {
     if (!/^[A-Z0-9_-]{3,20}$/i.test(body.code)) {
       return NextResponse.json(
         { success: false, error: 'Invalid coupon code format. Use 3-20 alphanumeric characters, hyphens, or underscores.' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders() }
       );
     }
 
@@ -50,7 +69,7 @@ export async function POST(request: NextRequest) {
     if (existing) {
       return NextResponse.json(
         { success: false, error: 'Coupon code already exists' },
-        { status: 409 }
+        { status: 409, headers: corsHeaders() }
       );
     }
 
@@ -84,12 +103,12 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data: newCoupon }, { status: 201 });
+    return NextResponse.json({ success: true, data: newCoupon }, { status: 201, headers: corsHeaders() });
   } catch (error) {
     console.error('Error creating coupon:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to create coupon' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders() }
     );
   }
 }
